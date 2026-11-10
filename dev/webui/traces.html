@@ -1,0 +1,230 @@
+<!--
+SPDX-FileCopyrightText: 2026 cobaltcore-dev contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lv2k8s Trace Viewer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background: #252525;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid #333;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .toolbar label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+        .btn {
+            background: #3d3d3d;
+            border: none;
+            color: #e0e0e0;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .btn:hover {
+            background: #4d4d4d;
+        }
+        .trace-info {
+            font-size: 13px;
+            color: #888;
+            margin-left: auto;
+        }
+        main {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        .drop-zone {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #444;
+            margin: 20px;
+            border-radius: 8px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .drop-zone.drag-over {
+            border-color: #2196F3;
+            background: rgba(33, 150, 243, 0.1);
+        }
+        .drop-zone h2 {
+            margin: 0 0 10px;
+            font-weight: 400;
+        }
+        .drop-zone p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .timeline-container {
+            position: absolute;
+            inset: 0;
+        }
+        .timeline-container canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>lv2k8s Trace Viewer</h1>
+        <div class="toolbar">
+            <input type="file" id="file-input" accept=".json" multiple style="display: none">
+            <button class="btn" onclick="document.getElementById('file-input').click()">Open File</button>
+            <button class="btn" onclick="viewer.clear()">Clear</button>
+            <label>
+                <input type="checkbox" id="auto-scroll" checked>
+                Auto-scroll
+            </label>
+        </div>
+        <span class="trace-info" id="trace-info"></span>
+    </header>
+    <main>
+        <div class="drop-zone" id="drop-zone">
+            <h2>Drop trace files here</h2>
+            <p>or click "Open File" to browse</p>
+            <p style="margin-top: 20px; font-size: 12px;">Supports Chrome Trace Format (.json)</p>
+        </div>
+        <div class="timeline-container hidden" id="timeline-container">
+            <canvas id="timeline-canvas"></canvas>
+        </div>
+    </main>
+
+    <script src="js/timeline.js"></script>
+    <script>
+        const viewer = {
+            timeline: null,
+            files: [],
+
+            init() {
+                const canvas = document.getElementById('timeline-canvas');
+                this.timeline = new Timeline(canvas);
+
+                // Drop zone
+                const dropZone = document.getElementById('drop-zone');
+                dropZone.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    dropZone.classList.add('drag-over');
+                });
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('drag-over');
+                });
+                dropZone.addEventListener('drop', e => {
+                    e.preventDefault();
+                    dropZone.classList.remove('drag-over');
+                    this.handleFiles(e.dataTransfer.files);
+                });
+
+                // File input
+                document.getElementById('file-input').addEventListener('change', e => {
+                    this.handleFiles(e.target.files);
+                });
+
+                // Auto-scroll
+                document.getElementById('auto-scroll').addEventListener('change', e => {
+                    this.timeline.setAutoScroll(e.target.checked);
+                });
+
+                // Prevent default drag behavior
+                document.body.addEventListener('dragover', e => e.preventDefault());
+                document.body.addEventListener('drop', e => e.preventDefault());
+            },
+
+            handleFiles(files) {
+                for (const file of files) {
+                    if (file.name.endsWith('.json')) {
+                        this.loadFile(file);
+                    }
+                }
+            },
+
+            loadFile(file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        this.loadTrace(data, file.name);
+                    } catch (err) {
+                        alert('Failed to parse: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            },
+
+            loadTrace(data, name) {
+                document.getElementById('drop-zone').classList.add('hidden');
+                document.getElementById('timeline-container').classList.remove('hidden');
+
+                if (this.files.length === 0) {
+                    this.timeline.loadTrace(data);
+                } else {
+                    this.timeline.addEvents(data.traceEvents || []);
+                }
+                this.files.push(name);
+                this.updateInfo();
+            },
+
+            updateInfo() {
+                const info = document.getElementById('trace-info');
+                const eventCount = this.timeline.events.length;
+                info.textContent = `${this.files.length} file(s), ${eventCount} events`;
+            },
+
+            clear() {
+                this.files = [];
+                this.timeline.events = [];
+                this.timeline.tracks.clear();
+                this.timeline.render();
+                document.getElementById('drop-zone').classList.remove('hidden');
+                document.getElementById('timeline-container').classList.add('hidden');
+                document.getElementById('trace-info').textContent = '';
+            }
+        };
+
+        viewer.init();
+    </script>
+</body>
+</html>

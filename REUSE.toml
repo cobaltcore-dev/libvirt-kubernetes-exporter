@@ -1,0 +1,36 @@
+# SPDX-FileCopyrightText: SAP SE or an SAP affiliate company
+# SPDX-License-Identifier: Apache-2.0
+version = 1
+SPDX-PackageName = "libvirt-kubernetes-exporter"
+SPDX-PackageDownloadLocation = "https://github.com/cobaltcore-dev/libvirt-kubernetes-exporter"
+
+[[annotations]]
+path = [
+  ".github/CODEOWNERS",
+  ".github/renovate.json5",
+  ".gitignore",
+  ".hyperspace/pull_request_bot.json",
+  ".license-scan-overrides.jsonl",
+  ".license-scan-rules.json",
+  "build/**/*",
+]
+SPDX-FileCopyrightText = "SAP SE or an SAP affiliate company"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = [
+  "go.mod",
+  "go.sum",
+  "Makefile.maker.yaml",
+  "vendor/modules.txt",
+]
+SPDX-FileCopyrightText = "cobaltcore-dev contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = [
+  "dev/scripts/**",
+  "charts/libvirt-kubernetes-exporter/crds/**",
+]
+SPDX-FileCopyrightText = "cobaltcore-dev contributors"
+SPDX-License-Identifier = "Apache-2.0"

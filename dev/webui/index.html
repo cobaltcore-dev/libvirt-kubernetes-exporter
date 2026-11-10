@@ -1,0 +1,369 @@
+<!--
+SPDX-FileCopyrightText: 2026 cobaltcore-dev contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lv2k8s</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>lv2k8s</h1>
+        <nav class="main-tabs">
+            <button class="main-tab active" data-tab="overview">Overview</button>
+            <button class="main-tab" data-tab="libvirt">Libvirt</button>
+            <button class="main-tab" data-tab="operator">Operator</button>
+            <button class="main-tab" data-tab="k8s">K8s</button>
+            <button class="main-tab" data-tab="tests">Tests</button>
+            <button class="main-tab" data-tab="traces">Traces</button>
+        </nav>
+        <div id="connection-status">
+            <span class="status-dot" id="harness-status"></span> Harness
+            <span class="status-dot" id="libvirt-status"></span> Libvirt
+            <span class="status-dot" id="k8s-status"></span> K8s
+            <span class="status-dot" id="operator-status"></span> Operator
+        </div>
+    </header>
+
+    <main>
+        <!-- Overview Tab -->
+        <section class="tab-panel" id="overview-panel">
+            <div class="overview-container">
+                <div class="architecture-diagram">
+                    <div class="arch-component" id="arch-libvirt">
+                        <div class="arch-icon">
+                            <svg viewBox="0 0 24 24" width="32" height="32">
+                                <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                                <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="7" cy="6" r="1.5" fill="currentColor"/>
+                                <circle cx="11" cy="6" r="1.5" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <div class="arch-label">fake-libvirt</div>
+                        <div class="arch-stats">
+                            <span id="overview-domain-count">0</span> domains
+                        </div>
+                        <div class="arch-status">
+                            <span class="status-dot" id="overview-libvirt-status"></span>
+                        </div>
+                    </div>
+
+                    <div class="arch-arrow">
+                        <svg viewBox="0 0 60 24" width="60" height="24">
+                            <defs>
+                                <marker id="arrow1" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="var(--accent)"/>
+                                </marker>
+                            </defs>
+                            <line x1="0" y1="12" x2="50" y2="12" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrow1)"/>
+                        </svg>
+                        <span class="arrow-label">observations</span>
+                    </div>
+
+                    <div class="arch-component" id="arch-operator">
+                        <div class="arch-icon">
+                            <svg viewBox="0 0 24 24" width="32" height="32">
+                                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+                                <path d="M12 7 L12 12 L16 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="arch-label">operator</div>
+                        <div class="arch-stats">
+                            <span id="overview-tracked-count">0</span> tracked
+                        </div>
+                        <div class="arch-status">
+                            <span class="status-dot" id="overview-operator-status"></span>
+                        </div>
+                    </div>
+
+                    <div class="arch-arrow">
+                        <svg viewBox="0 0 60 24" width="60" height="24">
+                            <defs>
+                                <marker id="arrow2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="var(--accent)"/>
+                                </marker>
+                            </defs>
+                            <line x1="0" y1="12" x2="50" y2="12" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrow2)"/>
+                        </svg>
+                        <span class="arrow-label">CRD writes</span>
+                    </div>
+
+                    <div class="arch-component" id="arch-k8s">
+                        <div class="arch-icon">
+                            <svg viewBox="0 0 24 24" width="32" height="32">
+                                <path d="M12 2 L22 8.5 L22 15.5 L12 22 L2 15.5 L2 8.5 Z" fill="none" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <div class="arch-label">fake-k8s</div>
+                        <div class="arch-stats">
+                            <span id="overview-resource-count">0</span> resources
+                        </div>
+                        <div class="arch-status">
+                            <span class="status-dot" id="overview-k8s-status"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overview-details">
+                    <div class="overview-card">
+                        <h3>Queue Status</h3>
+                        <div class="queue-mini">
+                            <div class="stat-box">
+                                <span class="stat-value" id="overview-queue-pending">0</span>
+                                <span class="stat-label">Pending</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-value" id="overview-queue-dropped">0</span>
+                                <span class="stat-label">Dropped</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <h3>Recent Activity</h3>
+                        <div class="activity-list" id="overview-activity">
+                            <div class="activity-item">Waiting for data...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Libvirt Tab -->
+        <section class="tab-panel hidden" id="libvirt-panel">
+            <div class="panel-toolbar">
+                <button class="btn" onclick="libvirtPanel.showAddDialog()">+ Add Domain</button>
+                <button class="btn btn-small" onclick="libvirtPanel.refresh()">Refresh</button>
+            </div>
+            <div class="domain-list" id="libvirt-domains">
+                <div class="loading">Loading...</div>
+            </div>
+        </section>
+
+        <!-- Operator Tab -->
+        <section class="tab-panel hidden" id="operator-panel">
+            <div class="sub-tabs">
+                <button class="sub-tab active" data-subtab="operator-domains">Domains</button>
+                <button class="sub-tab" data-subtab="operator-queue">Queue</button>
+                <button class="sub-tab" data-subtab="operator-logs">Logs</button>
+            </div>
+
+            <div class="sub-panel" id="operator-domains">
+                <div class="panel-toolbar">
+                    <button class="btn btn-small" onclick="operatorPanel.refresh()">Refresh</button>
+                </div>
+                <div class="domain-list" id="operator-domain-list">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div class="sub-panel hidden" id="operator-queue">
+                <div id="queue-stats"></div>
+                <div id="queue-items"></div>
+            </div>
+
+            <div class="sub-panel hidden" id="operator-logs">
+                <div class="log-toolbar">
+                    <label><input type="checkbox" id="log-autoscroll" checked> Auto-scroll</label>
+                    <button class="btn btn-small" onclick="operatorPanel.clearLogs()">Clear</button>
+                </div>
+                <div class="log-container" id="operator-log-list">
+                    <div class="log-entry">Waiting for logs...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- K8s Tab -->
+        <section class="tab-panel hidden" id="k8s-panel">
+            <div class="sub-tabs">
+                <button class="sub-tab active" data-subtab="k8s-resources">Resources</button>
+                <button class="sub-tab" data-subtab="k8s-faults">Faults</button>
+                <button class="sub-tab" data-subtab="k8s-requests">Requests</button>
+            </div>
+
+            <div class="sub-panel" id="k8s-resources">
+                <div class="panel-toolbar">
+                    <div class="resource-filter">
+                        <select id="k8s-resource-filter" onchange="k8sPanel.filterChanged()">
+                            <option value="all">All Resources</option>
+                            <option value="libvirtdomains">Domains</option>
+                            <option value="libvirtdomainheartbeats">Heartbeats</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-small" onclick="k8sPanel.refresh()">Refresh</button>
+                </div>
+                <div class="resource-list" id="k8s-resource-list">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div class="sub-panel hidden" id="k8s-faults">
+                <div class="panel-toolbar">
+                    <button class="btn" onclick="k8sPanel.showFaultDialog()">+ Add Fault</button>
+                </div>
+                <div id="fault-list"></div>
+            </div>
+
+            <div class="sub-panel hidden" id="k8s-requests">
+                <div class="panel-toolbar">
+                    <button class="btn btn-danger btn-small" onclick="k8sPanel.clearRequests()">Clear</button>
+                </div>
+                <div id="request-list"></div>
+            </div>
+        </section>
+
+        <!-- Tests Tab -->
+        <section class="tab-panel hidden" id="tests-panel">
+            <div id="test-queue" class="test-queue hidden"></div>
+
+            <div class="tests-layout-3col">
+                <div class="test-scenarios">
+                    <h3>Available Tests</h3>
+                    <div class="test-list" id="test-list">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="test-results">
+                    <h3>Results</h3>
+                    <div id="results-list"></div>
+                </div>
+
+                <div class="test-details">
+                    <h3>Details</h3>
+                    <div id="test-details-content">
+                        <div class="details-placeholder">Select a test or result to view details</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Traces Tab -->
+        <section class="tab-panel hidden" id="traces-panel">
+            <div class="traces-container">
+                <div class="trace-toolbar">
+                    <input type="file" id="trace-file-input" accept=".json" multiple style="display: none">
+                    <button class="btn" onclick="document.getElementById('trace-file-input').click()">Open File</button>
+                    <button class="btn" onclick="tracesPanel.loadFromAPI()">Load from Server</button>
+                    <button class="btn btn-small" onclick="tracesPanel.clear()">Clear</button>
+                    <label class="toolbar-checkbox">
+                        <input type="checkbox" id="trace-auto-scroll" checked>
+                        Auto-scroll
+                    </label>
+                    <span class="trace-info" id="trace-info"></span>
+                </div>
+
+                <div class="trace-drop-zone" id="trace-drop-zone">
+                    <div class="drop-content">
+                        <svg viewBox="0 0 24 24" width="48" height="48">
+                            <path d="M12 2 L12 16 M7 11 L12 16 L17 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M4 18 L4 20 L20 20 L20 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <h2>Drop trace files here</h2>
+                        <p>or click "Open File" to browse</p>
+                        <p class="hint">Supports Chrome Trace Format (.json)</p>
+                    </div>
+                </div>
+
+                <div class="trace-timeline hidden" id="trace-timeline">
+                    <canvas id="trace-canvas"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Add Domain Dialog -->
+    <div class="modal hidden" id="add-domain-modal">
+        <div class="modal-content">
+            <h3>Add Domain</h3>
+            <form id="add-domain-form" onsubmit="return libvirtPanel.addDomain(event)">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" name="name" required placeholder="my-vm">
+                </div>
+                <div class="form-group">
+                    <label>State</label>
+                    <select name="state">
+                        <option value="running">Running</option>
+                        <option value="shutoff">Shutoff</option>
+                        <option value="paused">Paused</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Max Memory (KB)</label>
+                    <input type="number" name="maxMemKB" value="2097152">
+                </div>
+                <div class="form-group">
+                    <label>Memory (KB)</label>
+                    <input type="number" name="memoryKB" value="1048576">
+                </div>
+                <div class="form-group">
+                    <label>vCPUs</label>
+                    <input type="number" name="vcpus" value="2" min="1">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="libvirtPanel.hideAddDialog()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Fault Dialog -->
+    <div class="modal hidden" id="add-fault-modal">
+        <div class="modal-content">
+            <h3>Add Fault Rule</h3>
+            <form id="add-fault-form" onsubmit="return k8sPanel.addFault(event)">
+                <div class="form-group">
+                    <label>Pattern (matches URL path)</label>
+                    <input type="text" name="pattern" required placeholder="libvirtdomains">
+                </div>
+                <div class="form-group">
+                    <label>Delay (ms)</label>
+                    <input type="number" name="delay_ms" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Error Code (0 = no error)</label>
+                    <input type="number" name="error_code" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Error Message</label>
+                    <input type="text" name="error_message" placeholder="Injected error">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="k8sPanel.hideFaultDialog()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/sse.js"></script>
+    <script src="js/timeline.js"></script>
+    <script src="js/tabs.js"></script>
+    <script src="js/panels/libvirt.js"></script>
+    <script src="js/panels/k8s.js"></script>
+    <script src="js/panels/operator.js"></script>
+    <script src="js/panels/harness.js"></script>
+    <script src="js/panels/overview.js"></script>
+    <script src="js/panels/traces.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- Test running overlay (fixed at bottom, only visible on tests tab) -->
+    <div id="test-running-overlay" class="test-running-overlay hidden">
+        <div class="test-running-content">
+            <span class="test-running-indicator"></span>
+            <span class="test-running-name"></span>
+            <span class="test-running-progress"></span>
+            <button class="btn btn-danger btn-small" onclick="harnessPanel.stopTest()">Stop</button>
+        </div>
+    </div>
+</body>
+</html>

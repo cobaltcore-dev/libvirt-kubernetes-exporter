@@ -1,0 +1,95 @@
+metadata:
+  url: https://github.com/cobaltcore-dev/libvirt-kubernetes-exporter
+
+binaries:
+  - name: libvirt--kubernetes-exporter
+    fromPackage: ./cmd/operator
+
+golang:
+  setGoModVersion: true
+
+golangciLint:
+  createConfig: true
+  timeout: 3m
+
+githubWorkflow:
+  global:
+    defaultBranch: main
+    goVersion: "1.26"
+  ci:
+    enabled: true
+    runOn:
+      - ubuntu-latest
+  securityChecks:
+    enabled: true
+  license:
+    enabled: true
+
+reuse:
+    annotations:
+      - paths:
+          - dev/scripts/**
+          - charts/libvirt-kubernetes-exporter/crds/**
+        SPDX-FileCopyrightText: "cobaltcore-dev contributors"
+        SPDX-License-Identifier: Apache-2.0
+
+controllerGen:
+  enabled: false
+
+nix:
+  enabled: false
+
+shellCheck:
+    ignorePaths:
+      - dev
+
+typos:
+    extendExcludes:
+      - dev/
+      - docs/
+
+renovate:
+  enabled: true
+  assignees:
+    - mchristianl
+    - PaulPickhardt
+
+license:
+  addHeaders: true
+  copyright: "cobaltcore-dev contributors"
+  spdx: Apache-2.0
+
+verbatim: |
+  CONTROLLER_GEN ?= controller-gen
+  CHART_DIR := charts/libvirt-kubernetes-exporter
+  CRD_DIR := $(CHART_DIR)/crds
+
+  .PHONY: generate
+  generate: ## Generate CRD and RBAC manifests from Go types
+  	$(CONTROLLER_GEN) crd \
+  		paths=./api/v1alpha1/... \
+  		output:crd:dir=$(CRD_DIR)
+  	# TODO: generate RBAC ClusterRole from +kubebuilder:rbac markers once
+  	# controller-gen output can be wired into Helm templates cleanly.
+  	# $(CONTROLLER_GEN) rbac:roleName=libvirt-kubernetes-exporter \
+  	# 	paths=./internal/controllers/... \
+  	# 	output:rbac:dir=$(CHART_DIR)/templates
+
+  .PHONY: install-controller-gen
+  install-controller-gen: ## Install controller-gen tool
+  	go install sigs.k8s.io/controller-tools/cmd/controller-gen@latest
+
+  # test-envtest downloads kube-apiserver 1.36 via setup-envtest and runs the
+  # envtest-based integration tests in ./integration/.
+  # CI caches ~/.local/share/kubebuilder-envtest between runs.
+  .PHONY: test-envtest
+  test-envtest: ## Run envtest integration tests (requires setup-envtest, downloads K8s 1.36 binaries)
+  	@printf "\e[1;36m>> Running envtest integration tests (K8s 1.36)\e[0m\n"
+  	@if ! hash setup-envtest 2>/dev/null; then \
+  		printf "\e[1;36m>> Installing setup-envtest...\e[0m\n"; \
+  		go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest; \
+  	fi
+  	assets=$$(setup-envtest use 1.36 -p path) && \
+  		test -n "$$assets" && \
+  		cd integration && KUBEBUILDER_ASSETS="$$assets" \
+  			go test -v -count=1 -timeout 120s . -run TestEnvtest

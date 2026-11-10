@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: 2026 SAP SE or an SAP affiliate company and cobaltcore-dev contributors
+# SPDX-License-Identifier: Apache-2.0
+
+name: Lint Helm Chart
+
+on:
+  pull_request:
+    paths:
+      - 'charts/**'
+      - '.github/workflows/helm-lint.yaml'
+
+jobs:
+  lint-helm-chart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+      - run: helm dependency update charts/libvirt-kubernetes-exporter
+      - run: helm lint charts/libvirt-kubernetes-exporter
+  check-version-bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Check Chart.yaml version bump
+        id: version-check
+        continue-on-error: true
+        run: |
+          if git diff --name-only origin/main...HEAD | grep -q '^charts/libvirt-kubernetes-exporter/'; then
+            if ! git diff origin/main...HEAD -- charts/libvirt-kubernetes-exporter/Chart.yaml | grep -q '^+version:'; then
+              echo "ERROR: Chart.yaml version was not updated! Please bump the chart version."
+              exit 1
+            fi
+          fi
+      - name: Comment on PR if version bump is missing
+        if: steps.version-check.outcome == 'failure'
+        uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2.9.4
+        with:
+          message: |
+            **Chart version bump required!**
+            Update the `Chart.yaml` in the `charts/libvirt-kubernetes-exporter/` Helm Chart directory by incrementing the `version` field according to [Semantic Versioning](https://semver.org/).
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  check-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Check CHANGELOG.md for version entry
+        id: changelog-check
+        continue-on-error: true
+        run: |
+          if git diff --name-only origin/main...HEAD | grep -q '^charts/libvirt-kubernetes-exporter/'; then
+            if ! git diff origin/main...HEAD -- charts/libvirt-kubernetes-exporter/CHANGELOG.md | grep -Eq '^## [0-9]+\.[0-9]+\.[0-9]+'; then
+              echo "ERROR: CHANGELOG.md does not contain a new version entry! Please update the changelog."
+              exit 1
+            fi
+          fi
+      - name: Comment on PR if changelog entry is missing
+        if: steps.changelog-check.outcome == 'failure'
+        uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2.9.4
+        with:
+          message: |
+            **CHANGELOG entry required!**
+            Update the `CHANGELOG.md` in the `charts/libvirt-kubernetes-exporter/` Helm Chart directory by adding a new section for the new version with a summary of changes.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

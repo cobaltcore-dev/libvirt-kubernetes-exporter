@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 cobaltcore-dev contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+fakeLibvirt:
+  enabled: true
+
+image:
+  repository: libvirt-exporter-dev
+  tag: latest
+  pullPolicy: Never
+
+config:
+  pollInterval: 2s
+  namespace: libvirt-kubernetes-exporter
+  logLevel: debug
+
+nodeSelector: null
+tolerations: []
+affinity: {}
