@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: 2026 cobaltcore-dev contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: libvirt-exporter-dev
+  namespace: kvm-operator
+  labels:
+    app: libvirt-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: libvirt-exporter
+  template:
+    metadata:
+      labels:
+        app: libvirt-exporter
+    spec:
+      serviceAccountName: libvirt-exporter
+      containers:
+        - name: fake-libvirt
+          image: fake-libvirtd-dev
+          imagePullPolicy: Never
+          args:
+            - --socket=/tmp/fake-libvirt/libvirt.sock
+            - --api-port=8081
+          ports:
+            - containerPort: 8081
+          volumeMounts:
+            - name: libvirt-sock
+              mountPath: /tmp/fake-libvirt
+        - name: exporter
+          image: libvirt-exporter-dev
+          imagePullPolicy: Never
+          args:
+            - --libvirt-socket=/tmp/fake-libvirt/libvirt.sock
+            - --namespace=kvm-operator
+            - --hostname=dev-node
+            - --poll-interval=2s
+          volumeMounts:
+            - name: libvirt-sock
+              mountPath: /tmp/fake-libvirt
+      volumes:
+        - name: libvirt-sock
+          emptyDir: {}

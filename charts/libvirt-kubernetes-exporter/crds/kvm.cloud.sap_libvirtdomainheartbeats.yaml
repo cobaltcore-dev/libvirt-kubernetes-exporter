@@ -1,0 +1,148 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.21.0
+  name: libvirtdomainheartbeats.kvm.cloud.sap
+spec:
+  group: kvm.cloud.sap
+  names:
+    kind: LibvirtDomainHeartbeat
+    listKind: LibvirtDomainHeartbeatList
+    plural: libvirtdomainheartbeats
+    shortNames:
+    - lvdhb
+    singular: libvirtdomainheartbeat
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.status.value
+      name: State
+      type: string
+    - jsonPath: .status.observed
+      name: Observed
+      type: date
+    - jsonPath: .status.status.prevValue
+      name: PrevState
+      priority: 1
+      type: string
+    - jsonPath: .status.status.prevObserved
+      name: PrevObserved
+      priority: 1
+      type: date
+    - jsonPath: .status.ttl
+      name: TTL
+      priority: 1
+      type: string
+    - jsonPath: .metadata.labels.libvirt\.kvm\.cloud\.sap/nova-flavor
+      name: Flavor
+      type: string
+    - jsonPath: .metadata.labels.libvirt\.kvm\.cloud\.sap/nova-name
+      name: Nova Name
+      type: string
+    - jsonPath: .metadata.labels.libvirt\.kvm\.cloud\.sap/nova-project
+      name: Project
+      type: string
+    - jsonPath: .metadata.labels.libvirt\.kvm\.cloud\.sap/nova-user
+      name: User
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: |-
+          LibvirtDomainHeartbeat is the per-VM Heartbeat CRD.
+          Updates frequently with observation timestamps.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          status:
+            properties:
+              driver:
+                type: string
+              host:
+                type: string
+              observed:
+                type: string
+              status:
+                description: Status tracks the VM state with full prev* history.
+                properties:
+                  observed:
+                    type: string
+                  prevObserved:
+                    type: string
+                  prevQueried:
+                    type: string
+                  prevSrc:
+                    type: string
+                  prevValue:
+                    type: string
+                  queried:
+                    type: string
+                  src:
+                    type: string
+                  value:
+                    type: string
+                required:
+                - observed
+                - queried
+                - src
+                - value
+                type: object
+              ttl:
+                type: string
+              xmlHash:
+                description: |-
+                  XMLHash tracks the VM config hash with full prev* history.
+                  Consumers can verify the domain CRD is current by comparing XMLHash.value == LibvirtDomain.status.xmlHash.
+                properties:
+                  observed:
+                    type: string
+                  prevObserved:
+                    type: string
+                  prevQueried:
+                    type: string
+                  prevSrc:
+                    type: string
+                  prevValue:
+                    type: string
+                  queried:
+                    type: string
+                  src:
+                    type: string
+                  value:
+                    type: string
+                required:
+                - observed
+                - queried
+                - src
+                - value
+                type: object
+            required:
+            - observed
+            - status
+            - ttl
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -1,0 +1,153 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.21.0
+  name: libvirtdomains.kvm.cloud.sap
+spec:
+  group: kvm.cloud.sap
+  names:
+    kind: LibvirtDomain
+    listKind: LibvirtDomainList
+    plural: libvirtdomains
+    shortNames:
+    - lvd
+    singular: libvirtdomain
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.state
+      name: State
+      type: string
+    - jsonPath: .status.stateReason
+      name: StateReason
+      type: string
+    - jsonPath: .status.migration.jobType
+      name: MigrationJob
+      type: string
+    - jsonPath: .status.migration.role
+      name: MigrationRole
+      type: string
+    - jsonPath: .status.novaMetadata.flavor
+      name: Flavor
+      type: string
+    - jsonPath: .status.novaMetadata.name
+      name: Nova Name
+      type: string
+    - jsonPath: .status.novaMetadata.project
+      name: Project
+      type: string
+    - jsonPath: .status.novaMetadata.user
+      name: User
+      type: string
+    - jsonPath: .status.lastChanged
+      name: LastChanged
+      priority: 1
+      type: date
+    - jsonPath: .status.deletedAt
+      name: DeletedAt
+      priority: 1
+      type: string
+    - jsonPath: .status.potentiallyCorrupted
+      name: PotentiallyCorrupted
+      priority: 1
+      type: boolean
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: |-
+          LibvirtDomain is the Data CRD - holds domain configuration.
+          Only updates when definition changes.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          status:
+            properties:
+              deletedAt:
+                type: string
+              domainXML:
+                x-kubernetes-preserve-unknown-fields: true
+              host:
+                type: string
+              lastChanged:
+                type: string
+              maxMemoryKB:
+                format: int64
+                type: integer
+              memoryKB:
+                format: int64
+                type: integer
+              migration:
+                description: MigrationStatus is the CRD representation of a domain's
+                  migration job.
+                properties:
+                  jobType:
+                    type: string
+                  role:
+                    type: string
+                required:
+                - role
+                type: object
+              name:
+                type: string
+              novaMetadata:
+                properties:
+                  flavor:
+                    type: string
+                  name:
+                    type: string
+                  project:
+                    type: string
+                  user:
+                    type: string
+                type: object
+              potentiallyCorrupted:
+                type: boolean
+              state:
+                type: string
+              stateCode:
+                format: int32
+                type: integer
+              stateReason:
+                type: string
+              stateReasonCode:
+                format: int32
+                type: integer
+              uuid:
+                type: string
+              vcpus:
+                format: int32
+                type: integer
+              xmlHash:
+                type: string
+            required:
+            - host
+            - name
+            - state
+            - stateCode
+            - uuid
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

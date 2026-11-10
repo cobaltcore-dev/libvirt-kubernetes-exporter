@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 cobaltcore-dev contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "libvirt-kubernetes-exporter.clusterScopedName" . }}
+  labels:
+    {{- include "libvirt-kubernetes-exporter.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "libvirt-kubernetes-exporter.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ include "libvirt-kubernetes-exporter.clusterScopedName" . }}-admin

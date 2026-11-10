@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: 2026 cobaltcore-dev contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+image:
+  # repository must be set at install time, e.g. --set image.repository=registry.example.com/libvirt-kubernetes-exporter
+  repository: ""
+  # Defaults to .Chart.AppVersion when empty
+  tag: ""
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+# CRD suffix for dev deployments (e.g. "-marcus" for isolated CRDs).
+# Leave empty for production (uses standard CRD names).
+crdSuffix: ""
+
+config:
+  # Libvirt
+  libvirtSocket: /var/run/libvirt/libvirt-sock
+  libvirtURI: qemu:///system
+
+  pollInterval: 10s
+  logLevel: info
+  deletedRetention: 5m
+  discardThreshold: 5s
+  observationQueueSize: 100
+  updateQueueSize: 100
+  # Staggered polling
+  pollRate: 5
+  maxPollRate: 20
+  # Heartbeat throttling — emit heartbeat every N polls (0 = always)
+  heartbeatPeriod: 6
+  # Rate limiting
+  heartbeatWriteRate: 20
+  # Domain write controller parallelism
+  domainWriteWorkers: 16
+  # Tracing
+  tracingEnabled: false
+  tracingDir: "./traces"
+
+# Inject a fake-libvirtd sidecar for local development.
+# When enabled, the socket volume switches from hostPath to emptyDir.
+fakeLibvirt:
+  enabled: false
+  repository: fake-libvirtd-dev
+  tag: latest
+  pullPolicy: Never
+  socketDir: /tmp/fake-libvirt
+  apiPort: 8081
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
+tolerations:
+  - operator: Exists
+
+nodeSelector: {}
+
+affinity: {}
+
+podAnnotations: {}
+podLabels: {}

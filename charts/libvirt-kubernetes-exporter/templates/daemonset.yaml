@@ -1,0 +1,93 @@
+# SPDX-FileCopyrightText: 2026 cobaltcore-dev contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+{{- include "libvirt-kubernetes-exporter.validateValues" . }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "libvirt-kubernetes-exporter.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "libvirt-kubernetes-exporter.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "libvirt-kubernetes-exporter.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "libvirt-kubernetes-exporter.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "libvirt-kubernetes-exporter.serviceAccountName" . }}
+      containers:
+        {{- if .Values.fakeLibvirt.enabled }}
+        - name: fake-libvirt
+          image: "{{ .Values.fakeLibvirt.repository }}:{{ .Values.fakeLibvirt.tag }}"
+          imagePullPolicy: {{ .Values.fakeLibvirt.pullPolicy }}
+          args:
+            - --socket={{ .Values.fakeLibvirt.socketDir }}/libvirt.sock
+            - --api-port={{ .Values.fakeLibvirt.apiPort }}
+          ports:
+            - containerPort: {{ .Values.fakeLibvirt.apiPort }}
+          volumeMounts:
+            - name: libvirt-sock
+              mountPath: {{ .Values.fakeLibvirt.socketDir }}
+        {{- end }}
+        - name: exporter
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --config=/etc/operator/config.yaml
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            {{- if .Values.crdSuffix }}
+            - name: CRD_SUFFIX
+              value: {{ .Values.crdSuffix | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/operator
+              readOnly: true
+            - name: libvirt-sock
+              mountPath: {{ if .Values.fakeLibvirt.enabled }}{{ .Values.fakeLibvirt.socketDir }}{{ else }}{{ .Values.config.libvirtSocket }}{{ end }}
+              {{- if not .Values.fakeLibvirt.enabled }}
+              readOnly: true
+              {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "libvirt-kubernetes-exporter.fullname" . }}
+        - name: libvirt-sock
+          {{- if .Values.fakeLibvirt.enabled }}
+          emptyDir: {}
+          {{- else }}
+          hostPath:
+            path: {{ .Values.config.libvirtSocket }}
+            type: Socket
+          {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

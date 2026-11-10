@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 cobaltcore-dev contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "libvirt-kubernetes-exporter.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "libvirt-kubernetes-exporter.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    libvirtSocket: {{ if .Values.fakeLibvirt.enabled }}{{ printf "%s/libvirt.sock" .Values.fakeLibvirt.socketDir | quote }}{{ else }}{{ .Values.config.libvirtSocket | quote }}{{ end }}
+    libvirtURI: {{ .Values.config.libvirtURI | quote }}
+    pollInterval: {{ .Values.config.pollInterval | quote }}
+    logLevel: {{ .Values.config.logLevel | quote }}
+    deletedRetention: {{ .Values.config.deletedRetention | quote }}
+    discardThreshold: {{ .Values.config.discardThreshold | quote }}
+    observationQueueSize: {{ .Values.config.observationQueueSize }}
+    updateQueueSize: {{ .Values.config.updateQueueSize }}
+    pollRate: {{ .Values.config.pollRate }}
+    maxPollRate: {{ .Values.config.maxPollRate }}
+    heartbeatPeriod: {{ .Values.config.heartbeatPeriod }}
+    heartbeatWriteRate: {{ .Values.config.heartbeatWriteRate }}
+    domainWriteWorkers: {{ .Values.config.domainWriteWorkers }}
+    tracingEnabled: {{ .Values.config.tracingEnabled }}
+    tracingDir: {{ .Values.config.tracingDir | quote }}

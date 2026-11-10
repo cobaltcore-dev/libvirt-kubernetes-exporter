@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 cobaltcore-dev contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: libvirt-kubernetes-exporter
+description: Exports libvirt VM state to Kubernetes custom resources
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

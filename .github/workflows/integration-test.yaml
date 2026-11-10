@@ -1,0 +1,43 @@
+# Copyright 2025 SAP SE
+# SPDX-License-Identifier: Apache-2.0
+
+name: GO Integration Test
+
+on:
+  push:
+    branches:
+      - main
+    paths: &go_paths
+      - '.github/workflows/integration-test.yaml'
+      - 'api/**'
+      - 'charts/**'
+      - 'cmd/**'
+      - 'internal/**'
+      - 'integration/**'
+      - 'dev/fake-libvirt/**'
+      - 'dev/harness/**'
+      - 'pkg/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Makefile'
+      - 'Makefile.maker.yaml'
+  pull_request:
+    paths: *go_paths
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: 1.26.0
+      - name: Cache envtest binaries
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.local/share/kubebuilder-envtest
+          key: kubebuilder-envtest-1.36-${{ runner.os }}
+      - name: Run integration test
+        run: make test-envtest
